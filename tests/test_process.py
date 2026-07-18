@@ -585,7 +585,7 @@ class PlatformParsingTests(unittest.TestCase):
 
     def test_macos_ps_parser_separates_start_marker_and_command(self) -> None:
         output = (
-            "Fri Jul 17 12:34:56 2026 "
+            "Fri Jul 17 12:34:56 2026 S+ "
             "/usr/bin/python3 -c pass ownership-nonce\n"
         )
 
@@ -597,6 +597,14 @@ class PlatformParsingTests(unittest.TestCase):
             identity.command_line,
             "/usr/bin/python3 -c pass ownership-nonce",
         )
+
+    def test_macos_ps_parser_treats_zombie_as_gone(self) -> None:
+        output = "Fri Jul 17 12:34:56 2026 Z (Python)\n"
+
+        with self.assertRaises(WorkerError) as raised:
+            process_module._parse_macos_identity(321, output)
+
+        self.assertEqual(raised.exception.code, "process_not_found")
 
     def test_macos_group_scan_ignores_zombies_but_finds_live_members(self) -> None:
         zombie_only = "101 4321 Z+\n102 9999 S\n"
@@ -668,7 +676,7 @@ class SystemCommandTests(unittest.TestCase):
         identity_result = subprocess.CompletedProcess(
             [],
             0,
-            f"Fri Jul 17 12:34:56 2026 python worker.py {long_nonce}\n",
+            f"Fri Jul 17 12:34:56 2026 S python worker.py {long_nonce}\n",
             "",
         )
         status_result = subprocess.CompletedProcess([], 0, "S\n", "")
@@ -769,6 +777,10 @@ class TerminationSafetyTests(unittest.TestCase):
     def test_wrong_start_marker_refuses_without_signalling(self) -> None:
         with patch.object(process_module.sys, "platform", "linux"), patch.object(
             process_module,
+            "_posix_process_anchor",
+            return_value=process_module._UnstableProcessAnchorContext(self.pid),
+        ), patch.object(
+            process_module,
             "read_process_identity",
             return_value=self.identity,
         ), patch.object(process_module, "_get_process_group") as getpgid, patch.object(
@@ -788,6 +800,10 @@ class TerminationSafetyTests(unittest.TestCase):
 
     def test_process_group_mismatch_refuses_without_signalling(self) -> None:
         with patch.object(process_module.sys, "platform", "linux"), patch.object(
+            process_module,
+            "_posix_process_anchor",
+            return_value=process_module._UnstableProcessAnchorContext(self.pid),
+        ), patch.object(
             process_module,
             "read_process_identity",
             return_value=self.identity,
@@ -1182,6 +1198,10 @@ class TerminationSafetyTests(unittest.TestCase):
             "_windows_process_anchor",
             side_effect=anchor,
             create=True,
+        ), patch.object(
+            process_module,
+            "_windows_command_tokens",
+            return_value=("python", "worker.py", self.nonce),
         ), patch.object(
             process_module,
             "read_process_identity",

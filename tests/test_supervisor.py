@@ -842,7 +842,10 @@ class SupervisorLaunchTests(unittest.TestCase):
         task_dir = Path("state") / "worker-runs" / "launch-task"
         nonce = "exact-launch-nonce"
         base_executable = "C:/Python/python.exe"
-        with patch.object(supervisor.os, "name", "nt"), patch.object(
+        package_path = Path(supervisor.__file__).resolve()
+        with patch.object(supervisor, "Path", return_value=package_path), patch.object(
+            supervisor.os, "name", "nt"
+        ), patch.object(
             supervisor.sys,
             "_base_executable",
             base_executable,
@@ -856,7 +859,7 @@ class SupervisorLaunchTests(unittest.TestCase):
 
         arguments = popen.call_args.args[0]
         environment = popen.call_args.kwargs["env"]
-        package_parent = str(Path(supervisor.__file__).resolve().parents[1])
+        package_parent = str(package_path.parents[1])
         self.assertEqual(arguments[0], base_executable)
         self.assertIn(nonce, arguments)
         self.assertEqual(arguments.count(nonce), 1)

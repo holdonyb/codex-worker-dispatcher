@@ -651,7 +651,7 @@ def _read_linux_identity(pid: int) -> ProcessIdentity:
 
 _MACOS_IDENTITY_PATTERN = re.compile(
     r"^\s*([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+"
-    r"\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.+?)\s*$",
+    r"\d{2}:\d{2}:\d{2}\s+\d{4})\s+(\S+)\s+(.+?)\s*$",
     re.DOTALL,
 )
 
@@ -659,7 +659,18 @@ _MACOS_IDENTITY_PATTERN = re.compile(
 def _read_macos_identity(pid: int) -> ProcessIdentity:
     try:
         result = subprocess.run(
-            ["ps", "-ww", "-p", str(pid), "-o", "lstart=", "-o", "command="],
+            [
+                "ps",
+                "-ww",
+                "-p",
+                str(pid),
+                "-o",
+                "lstart=",
+                "-o",
+                "state=",
+                "-o",
+                "command=",
+            ],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -697,7 +708,9 @@ def _parse_macos_identity(pid: int, output: str) -> ProcessIdentity:
     match = _MACOS_IDENTITY_PATTERN.match(output)
     if match is None:
         raise _invalid_query(pid, "ps returned an invalid process identity")
-    return ProcessIdentity(pid, match.group(1), match.group(2))
+    if not _process_state_is_live(match.group(2)):
+        raise _process_not_found(pid)
+    return ProcessIdentity(pid, match.group(1), match.group(3))
 
 
 def _command_tokens(command_line: str) -> tuple[str, ...]:
