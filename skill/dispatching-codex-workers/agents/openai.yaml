@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dispatching Codex Workers"
+  short_description: "Cross-platform workers with safe recovery"
+  default_prompt: "Use $dispatching-codex-workers to run bounded Codex workers with observable state and verified recovery."

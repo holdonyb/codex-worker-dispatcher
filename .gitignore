@@ -1,0 +1,16 @@
+.worktrees/
+.venv/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.coverage
+.DS_Store
+Thumbs.db
+worker-runs/
+manifest.json
+prompt.txt
+events.jsonl
+stderr.log
+last-message.txt

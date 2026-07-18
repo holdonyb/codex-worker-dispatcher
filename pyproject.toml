@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-worker-dispatcher"
+version = "0.1.0"
+description = "Cross-platform, observable, and safely reclaimable local workers for OpenAI Codex CLI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [
+    { name = "holdonyb" },
+]
+keywords = [
+    "codex",
+    "codex-cli",
+    "agent-skills",
+    "ai-agents",
+    "workers",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.scripts]
+codex-worker = "codex_worker_dispatcher.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/holdonyb/codex-worker-dispatcher"
+Issues = "https://github.com/holdonyb/codex-worker-dispatcher/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers" = ["skill/dispatching-codex-workers/SKILL.md"]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers/agents" = ["skill/dispatching-codex-workers/agents/openai.yaml"]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers/references" = ["skill/dispatching-codex-workers/references/design.md"]
