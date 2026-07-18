@@ -708,7 +708,7 @@ def _parse_macos_identity(pid: int, output: str) -> ProcessIdentity:
     match = _MACOS_IDENTITY_PATTERN.match(output)
     if match is None:
         raise _invalid_query(pid, "ps returned an invalid process identity")
-    if not _process_state_is_live(match.group(2)):
+    if not _macos_process_state_is_live(match.group(2)):
         raise _process_not_found(pid)
     return ProcessIdentity(pid, match.group(1), match.group(3))
 
@@ -886,6 +886,10 @@ def _get_process_group(pid: int) -> int:
 
 def _process_state_is_live(state: str) -> bool:
     return bool(state) and state[0].upper() not in {"X", "Z"}
+
+
+def _macos_process_state_is_live(state: str) -> bool:
+    return _process_state_is_live(state) and "E" not in state[1:].upper()
 
 
 def _linux_process_group_members(
@@ -1324,7 +1328,7 @@ def _parse_macos_process_group_has_live_members(
             ) from error
         if (
             member_process_group == process_group
-            and _process_state_is_live(fields[2])
+            and _macos_process_state_is_live(fields[2])
         ):
             return True
     return False

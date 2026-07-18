@@ -606,14 +606,22 @@ class PlatformParsingTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "process_not_found")
 
+    def test_macos_ps_parser_treats_exiting_process_as_gone(self) -> None:
+        output = "Fri Jul 17 12:34:56 2026 SE <exiting>\n"
+
+        with self.assertRaises(WorkerError) as raised:
+            process_module._parse_macos_identity(321, output)
+
+        self.assertEqual(raised.exception.code, "process_not_found")
+
     def test_macos_group_scan_ignores_zombies_but_finds_live_members(self) -> None:
-        zombie_only = "101 4321 Z+\n102 9999 S\n"
-        with_live_member = zombie_only + "103 4321 S+\n"
+        inactive_only = "101 4321 Z+\n102 9999 S\n104 4321 SE\n"
+        with_live_member = inactive_only + "103 4321 S+\n"
 
         self.assertFalse(
             process_module._parse_macos_process_group_has_live_members(
                 4321,
-                zombie_only,
+                inactive_only,
             )
         )
         self.assertTrue(
