@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -75,6 +76,12 @@ class InstallerTests(unittest.TestCase):
             str(Path(os.path.abspath(os.fspath(self.source)))),
         )
         self.assertEqual(list(self.target.parent.glob(".*.install-*")), [])
+
+    @unittest.skipIf(os.name == "nt", "POSIX directory mode contract")
+    def test_install_keeps_target_root_private_after_copy(self) -> None:
+        self._install()
+
+        self.assertEqual(stat.S_IMODE(self.target.lstat().st_mode), 0o700)
 
     def test_identical_reinstall_is_idempotent(self) -> None:
         self._install()

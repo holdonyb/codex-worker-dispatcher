@@ -128,7 +128,11 @@ class StateStorePathTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary_directory.cleanup)
-        self.root = Path(self.temporary_directory.name) / "state" / "worker-runs"
+        self.root = (
+            Path(self.temporary_directory.name).resolve(strict=False)
+            / "state"
+            / "worker-runs"
+        )
 
     def test_constructor_is_lazy_and_task_dir_maps_valid_id(self) -> None:
         store = StateStore(self.root)
@@ -275,7 +279,7 @@ class StateStorePathTests(unittest.TestCase):
         )
 
     def test_missing_ancestor_creation_fsyncs_each_parent_in_order(self) -> None:
-        base = Path(self.temporary_directory.name)
+        base = Path(self.temporary_directory.name).resolve(strict=False)
         root = base / "missing-a" / "missing-b" / "state"
         store = StateStore(root)
         real_mkdir = os.mkdir
@@ -318,7 +322,7 @@ class StateStorePathTests(unittest.TestCase):
         )
 
     def test_concurrent_ancestor_and_root_creation_fsyncs_parents(self) -> None:
-        base = Path(self.temporary_directory.name)
+        base = Path(self.temporary_directory.name).resolve(strict=False)
         root = base / "missing-a" / "missing-b" / "state"
         store = StateStore(root)
         real_mkdir = os.mkdir
@@ -459,7 +463,7 @@ class StateStorePathTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, "invalid_state")
 
     def test_parent_alias_retarget_does_not_redirect_state_operations(self) -> None:
-        base = Path(self.temporary_directory.name)
+        base = Path(self.temporary_directory.name).resolve(strict=False)
         original_parent = base / "original-parent"
         external_parent = base / "external-parent"
         original_parent.mkdir()
@@ -528,7 +532,7 @@ class StateStorePathTests(unittest.TestCase):
         self.assertFalse((external_parent / "state" / created.name).exists())
 
     def test_canonical_parent_swap_rejects_all_state_operations(self) -> None:
-        base = Path(self.temporary_directory.name)
+        base = Path(self.temporary_directory.name).resolve(strict=False)
         canonical_parent = base / "canonical-parent"
         external_parent = base / "external-parent"
         canonical_parent.mkdir()
@@ -587,7 +591,7 @@ class StateStorePathTests(unittest.TestCase):
 
     def test_create_task_dir_with_nonexistent_parent_path_still_works(self) -> None:
         root = (
-            Path(self.temporary_directory.name)
+            Path(self.temporary_directory.name).resolve(strict=False)
             / "missing-parent"
             / "nested"
             / "state"
@@ -994,31 +998,24 @@ class StateStorePersistenceTests(unittest.TestCase):
         external_task = external_root / self.task_dir.name
         original_prompt = (external_task / "prompt.txt").read_bytes()
         original_manifest = (external_task / "manifest.json").read_bytes()
-        real_stat = os.stat
-        real_lstat = os.lstat
+        real_task_entry_lstat = self.store._task_entry_lstat
         swapped = False
 
-        def maybe_swap(path: object) -> None:
+        def swapping_task_entry_lstat(
+            root: object,
+            task_id: str,
+        ) -> os.stat_result:
             nonlocal swapped
-            if (
-                not swapped
-                and not isinstance(path, int)
-                and Path(os.fsdecode(path)).name == self.task_dir.name
-            ):
+            if not swapped and task_id == self.task_dir.name:
                 self._swap_state_root_for_symlink(external_root)
                 swapped = True
-
-        def swapping_stat(path: object, *args: object, **kwargs: object) -> os.stat_result:
-            maybe_swap(path)
-            return real_stat(path, *args, **kwargs)  # type: ignore[arg-type]
-
-        def swapping_lstat(path: object, *args: object, **kwargs: object) -> os.stat_result:
-            maybe_swap(path)
-            return real_lstat(path, *args, **kwargs)  # type: ignore[arg-type]
+            return real_task_entry_lstat(root, task_id)  # type: ignore[arg-type]
 
         raised: WorkerError | None = None
-        with patch.object(state_module.os, "stat", side_effect=swapping_stat), patch.object(
-            state_module.os, "lstat", side_effect=swapping_lstat
+        with patch.object(
+            self.store,
+            "_task_entry_lstat",
+            side_effect=swapping_task_entry_lstat,
         ):
             try:
                 operation()
@@ -1937,6 +1934,11 @@ class StateStorePersistenceTests(unittest.TestCase):
                 for descriptor in (
                     task.file_descriptor,
                     task.root.file_descriptor if task.root is not None else None,
+                    (
+                        task.root.parent.file_descriptor
+                        if task.root is not None and task.root.parent is not None
+                        else None
+                    ),
                 )
                 if descriptor is not None
             }
@@ -1987,6 +1989,11 @@ class StateStorePersistenceTests(unittest.TestCase):
                 for descriptor in (
                     task.file_descriptor,
                     task.root.file_descriptor if task.root is not None else None,
+                    (
+                        task.root.parent.file_descriptor
+                        if task.root is not None and task.root.parent is not None
+                        else None
+                    ),
                 )
                 if descriptor is not None
             }
@@ -2048,6 +2055,11 @@ class StateStorePersistenceTests(unittest.TestCase):
                 for descriptor in (
                     task.file_descriptor,
                     task.root.file_descriptor if task.root is not None else None,
+                    (
+                        task.root.parent.file_descriptor
+                        if task.root is not None and task.root.parent is not None
+                        else None
+                    ),
                 )
                 if descriptor is not None
             }
@@ -2388,7 +2400,11 @@ class StateStorePersistenceTests(unittest.TestCase):
         conflict = PermissionError(errno.EACCES, "sharing violation")
         expected = {"task_id": self.task_dir.name, "status": "queued"}
 
-        with patch("codex_worker_dispatcher.state.os.name", "nt"), patch.object(
+        with patch.object(
+            state_module,
+            "_is_retryable_windows_file_conflict",
+            return_value=True,
+        ), patch.object(
             self.store,
             "_read_state_text",
             side_effect=[conflict, json.dumps(expected)],
@@ -2402,7 +2418,11 @@ class StateStorePersistenceTests(unittest.TestCase):
     def test_manifest_bounds_persistent_windows_read_conflict(self) -> None:
         conflict = PermissionError(errno.EACCES, "sharing violation")
 
-        with patch("codex_worker_dispatcher.state.os.name", "nt"), patch.object(
+        with patch.object(
+            state_module,
+            "_is_retryable_windows_file_conflict",
+            return_value=True,
+        ), patch.object(
             self.store,
             "_read_state_text",
             side_effect=conflict,
@@ -2415,7 +2435,11 @@ class StateStorePersistenceTests(unittest.TestCase):
         self.assertEqual(sleep.call_args_list, [call(0.025)] * 19)
 
     def test_manifest_does_not_retry_non_conflict_io_failure(self) -> None:
-        with patch("codex_worker_dispatcher.state.os.name", "nt"), patch.object(
+        with patch.object(
+            state_module,
+            "_is_retryable_windows_file_conflict",
+            return_value=False,
+        ), patch.object(
             self.store,
             "_read_state_text",
             side_effect=OSError(errno.EIO, "device error"),

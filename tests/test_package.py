@@ -48,6 +48,17 @@ class PackageContractTests(unittest.TestCase):
             },
         )
 
+    def test_worker_error_allows_exception_runtime_traceback_state(self) -> None:
+        error = WorkerError("invalid_state", "broken", {"task_id": "task"})
+
+        error.__traceback__ = None
+        error.__cause__ = ValueError("cause")
+
+        self.assertIsNone(error.__traceback__)
+        self.assertIsInstance(error.__cause__, ValueError)
+        with self.assertRaises(TypeError):
+            error.details["task_id"] = "changed"  # type: ignore[index]
+
     def test_module_version_command_writes_json(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "codex_worker_dispatcher", "--version"],

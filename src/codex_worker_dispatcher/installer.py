@@ -674,6 +674,48 @@ def _remove_staging(
     _safe_rmtree(path, expected_identity=expected_identity)
 
 
+def _restore_posix_staging_mode(
+    path: Path,
+    *,
+    expected_identity: tuple[int, int, int],
+) -> None:
+    if os.name == "nt":
+        return
+    descriptor: int | None = None
+    try:
+        flags = os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0)
+        flags |= getattr(os, "O_CLOEXEC", 0)
+        descriptor = os.open(path, flags)
+        opened = os.fstat(descriptor)
+        if (
+            opened.st_dev != expected_identity[0]
+            or opened.st_ino != expected_identity[1]
+            or not stat.S_ISDIR(opened.st_mode)
+            or _is_reparse_point(opened)
+        ):
+            raise OSError("staging directory changed while restoring its mode")
+        os.fchmod(descriptor, stat.S_IMODE(expected_identity[2]))
+        restored = os.fstat(descriptor)
+        entry = path.lstat()
+        if (
+            _stat_identity(restored) != expected_identity
+            or _stat_identity(entry) != expected_identity
+            or not stat.S_ISDIR(entry.st_mode)
+            or stat.S_ISLNK(entry.st_mode)
+            or _is_reparse_point(entry)
+        ):
+            raise OSError("staging directory mode or identity could not be restored")
+    except OSError as error:
+        raise WorkerError(
+            "install_failed",
+            "Could not preserve the private staging directory mode",
+            {"staging": str(path), "error": str(error)},
+        ) from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
 def install_skill(
     target: Path | None = None,
     *,
@@ -758,6 +800,10 @@ def install_skill(
             message="The bundled worker skill changed before copying",
         )
         shutil.copytree(source, staging, dirs_exist_ok=True)
+        _restore_posix_staging_mode(
+            staging,
+            expected_identity=staging_identity,
+        )
         _require_tree_snapshot(
             source,
             expected_identity=source_identity,

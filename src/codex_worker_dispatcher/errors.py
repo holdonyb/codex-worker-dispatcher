@@ -3,7 +3,7 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class WorkerError(Exception):
     code: str
     message: str
@@ -11,7 +11,7 @@ class WorkerError(Exception):
 
     def __post_init__(self) -> None:
         Exception.__init__(self, self.message)
-        object.__setattr__(self, "details", MappingProxyType(dict(self.details)))
+        self.details = MappingProxyType(dict(self.details))
 
     def to_dict(self) -> dict[str, Any]:
         return {

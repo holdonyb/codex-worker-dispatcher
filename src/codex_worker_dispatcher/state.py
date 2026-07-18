@@ -746,7 +746,7 @@ class StateStore:
                         dir_fd=parent.file_descriptor,
                     )
                 else:
-                    self.root.mkdir()
+                    os.mkdir(self.root)
             except FileExistsError:
                 pass
             current = self._root_entry_lstat(parent)
@@ -785,7 +785,7 @@ class StateStore:
                     ):
                         os.mkdir(task_id, mode=0o700, dir_fd=root.file_descriptor)
                     else:
-                        task_dir.mkdir(mode=0o700)
+                        os.mkdir(task_dir, mode=0o700)
                 except FileExistsError as error:
                     current = self._task_entry_lstat(root, task_id)
                     self._validate_root(root)

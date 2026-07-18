@@ -25,7 +25,7 @@ class SupervisorIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary_directory.cleanup)
-        self.base = Path(self.temporary_directory.name)
+        self.base = Path(self.temporary_directory.name).resolve(strict=False)
         self.state_root = self.base / "state" / "worker-runs"
         self.workdir = self.base / "workdir"
         self.workdir.mkdir()
@@ -283,7 +283,7 @@ class RealRunnerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary_directory.cleanup)
-        self.base = Path(self.temporary_directory.name)
+        self.base = Path(self.temporary_directory.name).resolve(strict=False)
         self.task_dir = self.base / "task"
         self.task_dir.mkdir()
         self.workdir = self.base / "work"
