@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-17
 
-**Status:** Approved direction; implementation pending
+**Status:** Implemented and validated for `v0.1.0`
 
 **Repository:** `holdonyb/codex-worker-dispatcher`
 
@@ -408,13 +408,15 @@ API access. A packaging smoke test builds a wheel, installs it into a clean
 environment, runs `codex-worker --help`, installs the skill into a temporary
 home, and validates the resulting skill directory.
 
-After the public push, the live CI run must complete successfully on all matrix
-jobs before release `v0.1.0` is created.
+The public snapshot passed all six Windows, Ubuntu, and macOS matrix jobs for
+Python 3.10 and 3.14 in
+[GitHub Actions run 29630973235](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235)
+before release `v0.1.0` was created.
 
 ## 14. Public Repository Configuration
 
-The GitHub repository will be created under `holdonyb` with public visibility,
-Issues enabled, and this description:
+The GitHub repository was created under `holdonyb` with public visibility,
+Issues and private vulnerability reporting enabled, and this description:
 
 > Cross-platform, observable, and safely reclaimable local workers for OpenAI
 > Codex CLI.

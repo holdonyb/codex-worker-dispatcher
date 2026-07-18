@@ -128,8 +128,10 @@ codex-worker reap-stale --older-than-sec 3600 --apply
 | macOS | 分离式 POSIX 进程组和有界身份复查 | `macos-latest` |
 | Linux | 分离式进程组、`/proc` 身份核对，并在可用时使用 pidfd 发送信号 | `ubuntu-latest` |
 
-支持 Python 3.10 到 3.14。上表是 Task 10 的 CI 目标；只有 GitHub Actions 矩阵
-成功后，发布文档才会记录跨平台验证已通过。
+支持 Python 3.10 到 3.14。上述 Task 10 的 CI 目标已于 2026-07-18 在六任务
+[GitHub Actions 矩阵](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235)
+中全部通过。验证后的源码发布为
+[v0.1.0](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.0)。
 
 ## 公开发布来源
 

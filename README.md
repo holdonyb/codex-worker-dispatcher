@@ -136,9 +136,11 @@ CLI still communicates according to the user's Codex configuration and terms.
 | macOS | Detached POSIX process group with bounded identity rechecks | `macos-latest` |
 | Linux | Detached process group with `/proc` identity and pidfd-backed signaling when available | `ubuntu-latest` |
 
-Python 3.10 through 3.14 is the supported interpreter range. The entries above
-are Task 10 CI targets; this release documentation will record cross-platform
-validation only after the GitHub Actions matrix succeeds.
+Python 3.10 through 3.14 is the supported interpreter range. These Task 10 CI targets
+passed on 2026-07-18 in the six-job
+[GitHub Actions matrix](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235).
+The verified source is published as
+[v0.1.0](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.0).
 
 ## Public release provenance
 

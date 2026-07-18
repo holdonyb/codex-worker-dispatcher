@@ -8,6 +8,12 @@
 
 **Tech Stack:** Python 3.10+, standard library, setuptools, unittest, Codex CLI, GitHub Actions, GitHub CLI
 
+**Execution status:** Completed on 2026-07-18. The sanitized public repository
+passed its six-job Windows, Ubuntu, and macOS matrix in
+[GitHub Actions run 29630973235](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235)
+and was released as
+[v0.1.0](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.0).
+
 ---
 
 ## File Map
