@@ -194,11 +194,14 @@ def _launched_identity(
             "supervisor",
             task_dir,
         ):
-            raise WorkerError(
-                "process_identity_mismatch",
-                "Launched supervisor identity does not match its task and role",
-                {"pid": process.pid},
-            )
+            if process.poll() is not None or time.monotonic() >= deadline:
+                raise WorkerError(
+                    "process_identity_mismatch",
+                    "Launched supervisor identity does not match its task and role",
+                    {"pid": process.pid},
+                )
+            time.sleep(0.01)
+            continue
         return identity
 
 

@@ -174,6 +174,65 @@ class LifecycleTests(unittest.TestCase):
         initial_manifest = store.write_manifest.call_args.args[1]
         self.assertIs(initial_manifest["runner_launching"], False)
 
+    def test_launched_identity_retries_transient_pre_exec_identity(self) -> None:
+        process = Mock(pid=321)
+        process.poll.return_value = None
+        transient = ProcessIdentity(321, "start", "python parent.py")
+        owned = ProcessIdentity(
+            321,
+            "start",
+            "python -m codex_worker_dispatcher.supervisor owned",
+        )
+        task_dir = Path("state") / "worker-runs" / "owned-task"
+
+        with patch.object(
+            lifecycle,
+            "read_process_identity",
+            side_effect=(transient, owned),
+        ) as read_identity, patch.object(
+            lifecycle,
+            "owned_task_identity_matches",
+            side_effect=(False, True),
+        ) as matches, patch.object(lifecycle.time, "sleep") as sleep:
+            result = lifecycle._launched_identity(
+                process,
+                "ownership-nonce",
+                task_dir,
+            )
+
+        self.assertIs(result, owned)
+        self.assertEqual(read_identity.call_count, 2)
+        self.assertEqual(matches.call_count, 2)
+        sleep.assert_called_once_with(0.01)
+
+    def test_launched_identity_bounds_persistent_identity_mismatch(self) -> None:
+        process = Mock(pid=321)
+        process.poll.return_value = None
+        transient = ProcessIdentity(321, "start", "python parent.py")
+
+        with patch.object(
+            lifecycle,
+            "read_process_identity",
+            return_value=transient,
+        ), patch.object(
+            lifecycle,
+            "owned_task_identity_matches",
+            return_value=False,
+        ), patch.object(
+            lifecycle.time,
+            "monotonic",
+            side_effect=(0.0, 5.0),
+        ), patch.object(lifecycle.time, "sleep") as sleep:
+            with self.assertRaises(WorkerError) as raised:
+                lifecycle._launched_identity(
+                    process,
+                    "ownership-nonce",
+                    Path("state") / "worker-runs" / "owned-task",
+                )
+
+        self.assertEqual(raised.exception.code, "process_identity_mismatch")
+        sleep.assert_not_called()
+
     def test_start_failure_after_runner_record_reclaims_every_owned_process(
         self,
     ) -> None:
@@ -562,7 +621,7 @@ class LifecycleTests(unittest.TestCase):
         store.write_manifest.assert_not_called()
 
     def test_controller_wait_timeout_does_not_force_terminal_state(self) -> None:
-        started = self._start(fake_delay_sec=1.5)
+        started = self._start(fake_delay_sec=5.0)
         with self.assertRaises(WorkerError) as raised:
             wait_task(
                 str(started["task_id"]),
