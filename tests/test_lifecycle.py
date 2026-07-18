@@ -584,6 +584,28 @@ class LifecycleTests(unittest.TestCase):
         store.read_manifest.assert_not_called()
         store.write_manifest.assert_not_called()
 
+    def test_identity_mismatch_with_completion_evidence_reconciles_completed(self) -> None:
+        task_dir = self._manual_task("20260718-100004-a1b2c3d4")
+        (task_dir / "last-message.txt").write_text("done\n", encoding="utf-8")
+        (task_dir / "events.jsonl").write_text(
+            json.dumps({"type": "fake.completed", "message": "done"}) + "\n",
+            encoding="utf-8",
+        )
+        mismatch = WorkerError(
+            "process_identity_mismatch",
+            "recorded supervisor changed",
+            {"pid": 22},
+        )
+        with patch.object(
+            lifecycle,
+            "_task_has_live_process",
+            side_effect=mismatch,
+        ):
+            reconciled = status_task(task_dir.name, self.state_root)
+        self.assertEqual(reconciled["status"], "completed")
+        self.assertEqual(reconciled["exit_code"], 0)
+        self.assertIsNone(reconciled["error"])
+
     def test_liveness_check_verifies_both_recorded_processes(self) -> None:
         identity = ProcessIdentity(11, "runner-start", "runner nonce")
         with patch.object(

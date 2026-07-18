@@ -705,6 +705,13 @@ def _has_completion_event(task_dir: Path) -> bool:
     return False
 
 
+def _has_completion_evidence(task_dir: Path) -> bool:
+    last_message = _read_regular_text(task_dir, "last-message.txt")
+    return bool(last_message and last_message.strip()) and _has_completion_event(
+        task_dir
+    )
+
+
 def _reconcile(
     store: StateStore,
     task_dir: Path,
@@ -712,8 +719,15 @@ def _reconcile(
 ) -> dict[str, object]:
     if manifest.get("status") in TERMINAL_STATES:
         return manifest
-    if _task_has_live_process(manifest, task_dir):
-        return manifest
+    try:
+        if _task_has_live_process(manifest, task_dir):
+            return manifest
+    except WorkerError as error:
+        if (
+            error.code != "process_identity_mismatch"
+            or not _has_completion_evidence(task_dir)
+        ):
+            raise
     # A process can disappear immediately before its supervisor's final atomic
     # manifest write. Re-read both the manifest and both verified process
     # identities for a bounded interval before orphan reconciliation wins.
@@ -722,17 +736,21 @@ def _reconcile(
         refreshed = store.read_manifest(task_dir)
         if refreshed.get("status") in TERMINAL_STATES:
             return refreshed
-        if _task_has_live_process(refreshed, task_dir):
-            return refreshed
+        try:
+            if _task_has_live_process(refreshed, task_dir):
+                return refreshed
+        except WorkerError as error:
+            if (
+                error.code != "process_identity_mismatch"
+                or not _has_completion_evidence(task_dir)
+            ):
+                raise
         manifest = refreshed
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break
         time.sleep(min(0.05, remaining))
-    last_message = _read_regular_text(task_dir, "last-message.txt")
-    completed = bool(last_message and last_message.strip()) and _has_completion_event(
-        task_dir
-    )
+    completed = _has_completion_evidence(task_dir)
     now = utc_now()
     updated = dict(manifest)
     updated.update(
