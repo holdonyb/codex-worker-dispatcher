@@ -2,11 +2,12 @@
 
 [简体中文](README.zh-CN.md)
 
-`codex-worker-dispatcher` is a cross-platform controller for bounded local Codex
-CLI jobs. It starts detached workers, records observable state, enforces a task
-TTL, and provides task-specific cancellation and identity-verified recovery.
-Normal operational commands write one JSON object to stdout. Argparse
-`--help` output is human-readable text.
+`codex-worker-dispatcher` is a public Codex Skill plus a cross-platform runtime
+for bounded local Codex CLI jobs. The Skill teaches when and how to dispatch
+detached workers; the runtime starts those workers, records observable state,
+enforces a task TTL, and provides task-specific cancellation and
+identity-verified recovery. Normal operational commands write one JSON object to stdout.
+Argparse `--help` output is human-readable text.
 
 ## Prerequisites
 
@@ -25,6 +26,16 @@ codex --version
 
 ## Installation
 
+Clone the repository into your Codex Skill directory when you want direct Skill
+discovery from source:
+
+```console
+git clone https://github.com/holdonyb/codex-worker-dispatcher.git "${CODEX_HOME:-$HOME/.codex}/skills/dispatching-codex-workers"
+```
+
+This installs the Codex Skill only. Worker dispatch still requires the bundled
+runtime.
+
 Install the latest version directly from GitHub with `pipx`:
 
 ```console
@@ -34,8 +45,10 @@ codex-worker skill install
 ```
 
 The skill is installed by default at
-`~/.agents/skills/dispatching-codex-workers`. Restart or reload your agent tool
-if it does not discover newly installed skills automatically.
+`$CODEX_HOME/skills/dispatching-codex-workers`, or
+`~/.codex/skills/dispatching-codex-workers` when `CODEX_HOME` is unset.
+Restart or reload your agent tool if it does not discover newly installed
+skills automatically.
 
 As a virtual-environment fallback:
 

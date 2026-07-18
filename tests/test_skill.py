@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "skill" / "dispatching-codex-workers"
+SKILL_DIR = ROOT
 SKILL_PATH = SKILL_DIR / "SKILL.md"
 DESIGN_PATH = SKILL_DIR / "references" / "design.md"
 OPENAI_PATH = SKILL_DIR / "agents" / "openai.yaml"
@@ -49,6 +49,12 @@ class PublicSkillTests(unittest.TestCase):
         self.assertRegex(
             body,
             r"(?im)^(?=.*danger-full-access)(?=.*(?:never|do not|must not|prohibited)).+$",
+        )
+
+    def test_nested_skill_directory_is_removed(self) -> None:
+        self.assertFalse(
+            (ROOT / "skill" / "dispatching-codex-workers").exists(),
+            "The public repository should expose the canonical Skill at the root",
         )
 
     def test_skill_reference_contains_deferred_runtime_details(self) -> None:

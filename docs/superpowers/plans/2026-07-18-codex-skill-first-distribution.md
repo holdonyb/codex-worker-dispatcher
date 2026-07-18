@@ -251,7 +251,7 @@ Expected: PASS with only expected platform skips
 
 - [ ] **Step 3: Validate the root Skill**
 
-Run: `python E:/.codex/skills/.system/skill-creator/scripts/quick_validate.py E:/work/codex-worker-dispatcher/.worktrees/feature-cross-platform`
+Run: `python ../../../.codex/skills/.system/skill-creator/scripts/quick_validate.py .`
 Expected: PASS
 
 - [ ] **Step 4: Build artifacts**

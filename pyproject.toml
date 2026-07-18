@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-worker-dispatcher"
-version = "0.1.0"
+version = "0.1.1"
 description = "Cross-platform, observable, and safely reclaimable local workers for OpenAI Codex CLI."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -47,6 +47,6 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [tool.setuptools.data-files]
-"share/codex-worker-dispatcher/skill/dispatching-codex-workers" = ["skill/dispatching-codex-workers/SKILL.md"]
-"share/codex-worker-dispatcher/skill/dispatching-codex-workers/agents" = ["skill/dispatching-codex-workers/agents/openai.yaml"]
-"share/codex-worker-dispatcher/skill/dispatching-codex-workers/references" = ["skill/dispatching-codex-workers/references/design.md"]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers" = ["SKILL.md"]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers/agents" = ["agents/openai.yaml"]
+"share/codex-worker-dispatcher/skill/dispatching-codex-workers/references" = ["references/design.md"]

@@ -178,11 +178,14 @@ class PublicReleaseAuditTests(unittest.TestCase):
 
         for snippet in (
             "Python 3.10+",
+            "Codex Skill",
             "Codex CLI",
             "authenticated",
             "pipx install git+https://github.com/holdonyb/codex-worker-dispatcher.git",
             "python -m venv .venv",
             "codex-worker skill install",
+            "$CODEX_HOME/skills/dispatching-codex-workers",
+            "~/.codex/skills/dispatching-codex-workers",
             "codex-worker route",
             "--intent read",
             "--intent write",
@@ -212,6 +215,7 @@ class PublicReleaseAuditTests(unittest.TestCase):
         ):
             with self.subTest(snippet=snippet):
                 self.assertIn(snippet, text)
+        self.assertNotIn("~/.agents/skills/dispatching-codex-workers", text)
 
     def test_chinese_readme_covers_installation_operation_and_release_status(self) -> None:
         text = self._read_required(ROOT / "README.zh-CN.md")
@@ -236,11 +240,14 @@ class PublicReleaseAuditTests(unittest.TestCase):
 
         for snippet in (
             "Python 3.10+",
+            "Codex Skill",
             "Codex CLI",
             "完成认证",
             "pipx install git+https://github.com/holdonyb/codex-worker-dispatcher.git",
             "python -m venv .venv",
             "codex-worker skill install",
+            "$CODEX_HOME/skills/dispatching-codex-workers",
+            "~/.codex/skills/dispatching-codex-workers",
             "codex-worker route",
             "--intent read",
             "--intent write",
@@ -270,6 +277,7 @@ class PublicReleaseAuditTests(unittest.TestCase):
         ):
             with self.subTest(snippet=snippet):
                 self.assertIn(snippet, text)
+        self.assertNotIn("~/.agents/skills/dispatching-codex-workers", text)
 
     def test_package_metadata_uses_the_public_readme(self) -> None:
         pyproject = self._read_required(ROOT / "pyproject.toml")

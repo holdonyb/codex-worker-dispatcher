@@ -17,17 +17,17 @@ class PackageContractTests(unittest.TestCase):
 
         for data_file_mapping in (
             '"share/codex-worker-dispatcher/skill/dispatching-codex-workers" = '
-            '["skill/dispatching-codex-workers/SKILL.md"]',
+            '["SKILL.md"]',
             '"share/codex-worker-dispatcher/skill/dispatching-codex-workers/agents" = '
-            '["skill/dispatching-codex-workers/agents/openai.yaml"]',
+            '["agents/openai.yaml"]',
             '"share/codex-worker-dispatcher/skill/dispatching-codex-workers/references" = '
-            '["skill/dispatching-codex-workers/references/design.md"]',
+            '["references/design.md"]',
         ):
             with self.subTest(data_file_mapping=data_file_mapping):
                 self.assertIn(data_file_mapping, pyproject)
 
     def test_version_is_public(self) -> None:
-        self.assertEqual(__version__, "0.1.0")
+        self.assertEqual(__version__, "0.1.1")
 
     def test_worker_error_serializes_to_json_envelope(self) -> None:
         error = WorkerError(
@@ -69,7 +69,7 @@ class PackageContractTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), {"version": "0.1.0"})
+        self.assertEqual(json.loads(result.stdout), {"version": "0.1.1"})
 
 
 if __name__ == "__main__":

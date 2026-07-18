@@ -26,7 +26,9 @@ _MAX_MARKER_BYTES = 64 * 1024
 
 
 def default_skill_target() -> Path:
-    return Path.home() / ".agents" / "skills" / _SKILL_NAME
+    codex_home = os.environ.get("CODEX_HOME")
+    base = Path(codex_home).expanduser() if codex_home else Path.home() / ".codex"
+    return base / "skills" / _SKILL_NAME
 
 
 def _absolute_path(path: Path) -> Path:
@@ -190,7 +192,7 @@ def _bundled_skill_source() -> Path:
             / "skill"
             / _SKILL_NAME
         )
-    candidates.append(Path(__file__).resolve().parents[2] / "skill" / _SKILL_NAME)
+    candidates.append(Path(__file__).resolve().parents[2])
 
     for candidate in candidates:
         if candidate.is_dir() and (candidate / "SKILL.md").is_file():

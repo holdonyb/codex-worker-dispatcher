@@ -2,10 +2,10 @@
 
 [English](README.md)
 
-`codex-worker-dispatcher` 是一个跨平台的本地 Codex CLI 任务控制器。它可以启动与
-当前终端分离的 worker、持久化可观察状态、执行任务 TTL，并提供按任务取消和经过
-身份校验的恢复能力。正常操作命令只向 stdout 输出一个 JSON 对象；argparse 的
-`--help` 是供人阅读的文本。
+`codex-worker-dispatcher` 是一个公开的 Codex Skill，加上一套跨平台的本地 Codex
+CLI 任务运行时。Skill 负责教会 Agent 何时以及如何分发分离式 worker；运行时负责
+启动这些 worker、持久化可观察状态、执行任务 TTL，并提供按任务取消和经过身份校验
+的恢复能力。正常操作命令只向 stdout 输出一个 JSON 对象；argparse 的 `--help` 是供人阅读的文本。
 
 ## 前置条件
 
@@ -24,6 +24,15 @@ codex --version
 
 ## 安装
 
+如果你希望直接从源码目录让 Codex 发现这个 Skill，可以把仓库克隆到 Codex Skill
+目录：
+
+```console
+git clone https://github.com/holdonyb/codex-worker-dispatcher.git "${CODEX_HOME:-$HOME/.codex}/skills/dispatching-codex-workers"
+```
+
+这种方式只提供 Codex Skill；真正分发 worker 仍然需要下面的 runtime。
+
 推荐通过 `pipx` 直接从 GitHub 安装最新版：
 
 ```console
@@ -32,8 +41,9 @@ codex-worker --version
 codex-worker skill install
 ```
 
-Skill 默认安装到 `~/.agents/skills/dispatching-codex-workers`。如果 Agent 工具不会
-自动发现新安装的 Skill，请重启或重新加载。
+Skill 默认安装到 `$CODEX_HOME/skills/dispatching-codex-workers`；如果没有设置
+`CODEX_HOME`，则安装到 `~/.codex/skills/dispatching-codex-workers`。如果
+Agent 工具不会自动发现新安装的 Skill，请重启或重新加载。
 
 也可以使用虚拟环境：
 

@@ -39,7 +39,7 @@ class InstallerTests(unittest.TestCase):
             "# Design\n",
             encoding="utf-8",
         )
-        self.target = self.root / "home" / ".agents" / "skills" / "dispatching-codex-workers"
+        self.target = self.root / "home" / ".codex" / "skills" / "dispatching-codex-workers"
 
     def _make_directory_reparse(self, link: Path, target: Path) -> None:
         if os.name == "nt":
@@ -720,13 +720,35 @@ class InstallerTests(unittest.TestCase):
             "new owner\n",
         )
 
-    def test_default_install_uses_temporary_home_and_not_real_home(self) -> None:
+    def test_default_install_uses_codex_home_when_set(self) -> None:
+        codex_home = self.root / "codex-home"
+        expected = codex_home / "skills" / "dispatching-codex-workers"
+
+        with patch.dict(
+            os.environ,
+            {"CODEX_HOME": str(codex_home)},
+            clear=False,
+        ), patch(
+            "codex_worker_dispatcher.installer._bundled_skill_source",
+            return_value=self.source,
+        ):
+            self.assertEqual(default_skill_target(), expected)
+            result = install_skill()
+
+        self.assertEqual(result["target"], str(expected))
+        self.assertTrue((expected / "SKILL.md").is_file())
+
+    def test_default_install_falls_back_to_dot_codex_under_home(self) -> None:
         temporary_home = self.root / "isolated-home"
-        expected = temporary_home / ".agents" / "skills" / "dispatching-codex-workers"
+        expected = temporary_home / ".codex" / "skills" / "dispatching-codex-workers"
 
         with patch(
             "codex_worker_dispatcher.installer.Path.home",
             return_value=temporary_home,
+        ), patch.dict(
+            os.environ,
+            {},
+            clear=True,
         ), patch(
             "codex_worker_dispatcher.installer._bundled_skill_source",
             return_value=self.source,
