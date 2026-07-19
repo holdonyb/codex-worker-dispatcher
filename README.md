@@ -9,6 +9,49 @@ enforces a task TTL, and provides task-specific cancellation and
 identity-verified recovery. Normal operational commands write one JSON object to stdout.
 Argparse `--help` output is human-readable text.
 
+Public links:
+
+- Repository: https://github.com/holdonyb/codex-worker-dispatcher
+- Release: https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.1
+- Latest green CI matrix: https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29653928879
+- Sharing guide: [docs/public-sharing.md](docs/public-sharing.md)
+
+## Why this exists
+
+This project exists for agents that need a safer way to hand off bounded local
+Codex CLI work without losing lifecycle control. It gives you:
+
+- A reusable Codex Skill with a root-level `SKILL.md`
+- A local runtime that starts detached workers and tracks task state
+- Per-task cancellation and identity-verified recovery
+- Cross-platform behavior verified on Windows, macOS, and Linux
+
+## Who it is for
+
+Use this project when you want to:
+
+- share a Codex Skill publicly instead of keeping it private inside one machine
+- let a parent agent delegate bounded local work to a detached Codex worker
+- keep a task ID, poll status, wait for completion, and recover safely
+- avoid ad-hoc background process scripts that are hard to audit
+
+Do not use it as a hosted queue, multi-user scheduler, or remote execution
+service.
+
+## Quick start
+
+Install the runtime and managed Skill in under a minute:
+
+```console
+pipx install git+https://github.com/holdonyb/codex-worker-dispatcher.git
+codex-worker --version
+codex-worker skill install
+```
+
+Then confirm the Skill is present at
+`${CODEX_HOME:-$HOME/.codex}/skills/dispatching-codex-workers` and start using
+it from your Codex environment.
+
 ## Prerequisites
 
 - Python 3.10+ (3.10 or newer).
@@ -151,9 +194,9 @@ CLI still communicates according to the user's Codex configuration and terms.
 
 Python 3.10 through 3.14 is the supported interpreter range. These Task 10 CI targets
 passed on 2026-07-18 in the six-job
-[GitHub Actions matrix](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235).
+[GitHub Actions matrix](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29653928879).
 The verified source is published as
-[v0.1.0](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.0).
+[v0.1.1](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.1).
 
 ## Public release provenance
 

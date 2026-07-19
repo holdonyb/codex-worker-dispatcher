@@ -7,6 +7,48 @@ CLI 任务运行时。Skill 负责教会 Agent 何时以及如何分发分离式
 启动这些 worker、持久化可观察状态、执行任务 TTL，并提供按任务取消和经过身份校验
 的恢复能力。正常操作命令只向 stdout 输出一个 JSON 对象；argparse 的 `--help` 是供人阅读的文本。
 
+公开链接：
+
+- 仓库：https://github.com/holdonyb/codex-worker-dispatcher
+- 发布页：https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.1
+- 最新全绿 CI：https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29653928879
+- 分享说明页：[docs/public-sharing.zh-CN.md](docs/public-sharing.zh-CN.md)
+
+## 这个项目解决什么问题
+
+这个项目用于把“可边界控制的本地 Codex CLI 任务分发”公开成一个可复用 Skill，而不
+只是你自己机器上的一段私有脚本。它提供：
+
+- 一个可公开分享的根目录 `SKILL.md`
+- 一套能启动分离式 worker 并追踪任务状态的本地 runtime
+- 按任务取消与经过身份校验的恢复能力
+- 已在 Windows、macOS、Linux 上验证过的跨平台行为
+
+## 适合谁用
+
+如果你想做下面这些事，就适合：
+
+- 把 Codex Skill 公开分享给别人，而不是只放在本机私有目录里
+- 让父 Agent 把有边界的本地工作委派给分离式 Codex worker
+- 保留任务 ID，持续查询状态、等待完成、收集结果
+- 避免继续维护难审计、难恢复的后台脚本
+
+它不适合拿来做远程任务队列、托管服务或多用户调度器。
+
+## 一分钟安装
+
+先安装 runtime，再安装它管理的 Skill：
+
+```console
+pipx install git+https://github.com/holdonyb/codex-worker-dispatcher.git
+codex-worker --version
+codex-worker skill install
+```
+
+安装完成后，Skill 默认位于
+`${CODEX_HOME:-$HOME/.codex}/skills/dispatching-codex-workers`，然后就可以在你
+的 Codex 环境中直接使用。
+
 ## 前置条件
 
 - Python 3.10+。
@@ -139,9 +181,9 @@ codex-worker reap-stale --older-than-sec 3600 --apply
 | Linux | 分离式进程组、`/proc` 身份核对，并在可用时使用 pidfd 发送信号 | `ubuntu-latest` |
 
 支持 Python 3.10 到 3.14。上述 Task 10 的 CI 目标已于 2026-07-18 在六任务
-[GitHub Actions 矩阵](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29630973235)
+[GitHub Actions 矩阵](https://github.com/holdonyb/codex-worker-dispatcher/actions/runs/29653928879)
 中全部通过。验证后的源码发布为
-[v0.1.0](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.0)。
+[v0.1.1](https://github.com/holdonyb/codex-worker-dispatcher/releases/tag/v0.1.1)。
 
 ## 公开发布来源
 
